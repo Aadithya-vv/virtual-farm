@@ -126,3 +126,21 @@
 .icon-btn:hover {
   color: #2e7d32;
 }
+.sidebar {
+  width: 230px;
+  background: linear-gradient(180deg, #ffffff, #f5f8f5);
+  padding: 12px;
+  border-right: 1px solid #cce3d1;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  overflow-y: auto;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 180px;
+    padding: 8px;
+  }
+}

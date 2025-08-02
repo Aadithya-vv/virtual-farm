@@ -10,7 +10,11 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, setDoc, deleteDoc, doc } from "firebase/firestore";
 
 export default function App() {
-  const [vegetables, setVegetables] = useState([]);
+  const [vegetables, setVegetables] = useState([
+    { name: 'Tomato', emoji: '🍅', spread: 30, depth: 20 },
+    { name: 'Carrot', emoji: '🥕', spread: 20, depth: 15 },
+    { name: 'Lettuce', emoji: '🥬', spread: 25, depth: 10 }
+  ]);
   const [plants, setPlants] = useState([]);
   const [selectedVegetable, setSelectedVegetable] = useState(null);
   const [scale, setScale] = useState(1);
@@ -20,8 +24,8 @@ export default function App() {
   const [toast, setToast] = useState({ visible:false, message:'' });
   const [user, setUser] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true); // new
 
-  // Listen for auth state changes
   useEffect(()=>{
     const unsub=onAuthStateChanged(auth, (u)=>{
       if(u) setUser(u); else setUser(null);
@@ -29,7 +33,6 @@ export default function App() {
     return ()=>unsub();
   },[]);
 
-  // Load plants when user logs in
   useEffect(()=>{
     if(user){
       const load=async()=>{
@@ -40,51 +43,48 @@ export default function App() {
     }
   },[user]);
 
-  // Save plants & delete removed docs
   useEffect(()=>{
     if(user){
       const savePlants = async () => {
-        const userPlantsCol = collection(db,"users",user.uid,"plants");
-        const snap = await getDocs(userPlantsCol);
-        const existingIds = snap.docs.map(d => d.id);   // e.g., ["0","1"]
-
-        // Save/update current plants
-        await Promise.all(
-          plants.map((p, idx) => 
-            setDoc(doc(userPlantsCol, idx.toString()), p)
-          )
-        );
-
-        // Delete docs no longer present
-        const currentIds = plants.map((_, idx) => idx.toString());
-        const toDelete = existingIds.filter(id => !currentIds.includes(id));
-        await Promise.all(
-          toDelete.map(id => deleteDoc(doc(userPlantsCol, id)))
-        );
+        const col = collection(db,"users",user.uid,"plants");
+        const snap = await getDocs(col);
+        const existingIds = snap.docs.map(d => d.id);
+        await Promise.all(plants.map((p, idx) =>
+          setDoc(doc(col, idx.toString()), p)
+        ));
+        const keepIds = plants.map((_, idx)=>idx.toString());
+        const toDelete = existingIds.filter(id=>!keepIds.includes(id));
+        await Promise.all(toDelete.map(id=>deleteDoc(doc(col, id))));
       };
       savePlants();
     }
   },[plants,user]);
 
   if(!user) return showSignup
-    ? <SignupPage setUser={setUser} setToast={setToast} goToLogin={()=>setShowSignup(false)} />
-    : <LoginPage setUser={setUser} setToast={setToast} goToSignup={()=>setShowSignup(true)} />;
+    ? <SignupPage setUser={setUser} goToLogin={()=>setShowSignup(false)} />
+    : <LoginPage setUser={setUser} goToSignup={()=>setShowSignup(true)} />;
 
   return (
     <div className="app">
-      <Sidebar
-        vegetables={vegetables}
-        setVegetables={setVegetables}
-        selectedVegetable={selectedVegetable}
-        setSelectedVegetable={setSelectedVegetable}
-        plants={plants}
-        setPlants={setPlants}
-        editingIndex={editingIndex}
-        setEditingIndex={setEditingIndex}
-        setToast={setToast}
-      />
+      {/* show/hide sidebar based on sidebarVisible */}
+      {sidebarVisible && (
+        <Sidebar
+          vegetables={vegetables}
+          setVegetables={setVegetables}
+          selectedVegetable={selectedVegetable}
+          setSelectedVegetable={setSelectedVegetable}
+          plants={plants}
+          setPlants={setPlants}
+          editingIndex={editingIndex}
+          setEditingIndex={setEditingIndex}
+          setToast={setToast}
+        />
+      )}
       <main>
         <div className="top-bar">
+          <button className="hamburger" onClick={()=>setSidebarVisible(!sidebarVisible)}>
+            ☰
+          </button>
           <Controls scale={scale} setScale={setScale} coords={coords} />
           <button className="logout-btn" onClick={()=>signOut(auth)}>🚪 Logout</button>
         </div>
