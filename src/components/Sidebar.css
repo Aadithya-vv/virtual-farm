@@ -1,0 +1,128 @@
+.sidebar {
+  width: 230px;
+  background: linear-gradient(180deg, #ffffff, #f5f8f5);
+  padding: 12px;
+  border-right: 1px solid #cce3d1;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  overflow-y: auto;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.sidebar h2 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: #2e7d32;
+}
+
+.vegetables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.veg-item {
+  cursor: pointer;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: rgba(76, 175, 80, 0.05);
+  font-size: 0.85rem;
+  transition: background 0.2s ease, border 0.2s;
+}
+
+.veg-item:hover {
+  background: rgba(76, 175, 80, 0.12);
+}
+
+.veg-item.selected {
+  border: 1px solid #4CAF50;
+  background: rgba(76, 175, 80, 0.20);
+}
+
+.add-veg-form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.add-veg-form input {
+  padding: 5px 8px;
+  border: 1px solid #cce3d1;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.add-veg-form input:focus {
+  border-color: #4CAF50;
+}
+
+.add-veg-form button {
+  padding: 5px 8px;
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
+}
+
+.add-veg-form button:hover {
+  background: #3c9440;
+}
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-left: 4px;
+  color: #4CAF50;
+  transition: color 0.2s;
+  padding: 2px;
+}
+
+.icon-btn:hover {
+  color: #2e7d32;
+}
+.plant-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.plant-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: rgba(76, 175, 80, 0.05);
+  font-size: 0.85rem;
+  transition: background 0.2s;
+}
+
+.plant-item:hover {
+  background: rgba(76, 175, 80, 0.12);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  margin-left: 4px;
+  color: #4CAF50;
+  transition: color 0.2s;
+  padding: 2px;
+}
+
+.icon-btn:hover {
+  color: #2e7d32;
+}
