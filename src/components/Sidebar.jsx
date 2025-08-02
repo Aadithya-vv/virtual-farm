@@ -6,7 +6,7 @@ export default function Sidebar({
   selectedVegetable, setSelectedVegetable,
   plants, setPlants,
   editingIndex, setEditingIndex,
-  setToast                       // ✅ receives setToast for toast popup
+  setToast
 }) {
   const [vegName, setVegName] = useState('');
   const [vegSpread, setVegSpread] = useState('');
@@ -23,12 +23,17 @@ export default function Sidebar({
     }
     setVegetables(prev => [...prev, {
       name: vegName,
-      spread: parseInt(vegSpread),
-      depth: parseInt(vegDepth),
+      spread: parseInt(vegSpread, 10),
+      depth: parseInt(vegDepth, 10),
       emoji: vegEmoji
     }]);
     setVegName(''); setVegSpread(''); setVegDepth(''); setVegEmoji('');
   };
+
+  const plantCounts = {};
+  plants.forEach(p => {
+    plantCounts[p.name] = (plantCounts[p.name] || 0) + 1;
+  });
 
   return (
     <aside className="sidebar">
@@ -37,10 +42,9 @@ export default function Sidebar({
       <input type="number" value={vegSpread} onChange={e => setVegSpread(e.target.value)} placeholder="Spread (cm)"/>
       <input type="number" value={vegDepth} onChange={e => setVegDepth(e.target.value)} placeholder="Depth (cm)"/>
 
-      {/* ✅ Common emojis with better text color */}
       <div style={{
         marginBottom: '8px',
-        color: '#2e7d32',          // 🌿 rich dark green for visibility
+        color: '#2e7d32',
         fontWeight: '500',
         fontSize: '0.95rem'
       }}>
@@ -57,20 +61,38 @@ export default function Sidebar({
       <h2>🌱 Palette</h2>
       <div className="vegetables">
         {vegetables.map((veg, idx) => {
-          const count = plants.filter(p=>p.name===veg.name).length;
+          const count = plantCounts[veg.name] || 0;
           return (
             <div
               key={idx}
+              draggable
+              onDragStart={e => {
+                e.dataTransfer.setData("application/json", JSON.stringify(veg));
+              }}
               className={selectedVegetable === idx ? 'selected veg-item' : 'veg-item'}
               onClick={() => setSelectedVegetable(idx)}
               style={{position:'relative'}}
+              title="Drag to grid or click to select"
             >
               <span style={{fontSize:'24px'}}>{veg.emoji}</span>
+
+              {/* 🟩 Count badge */}
               {count>0 && <span style={{
                 position:'absolute', top:0, right:0, background:'#4CAF50', color:'#fff',
                 borderRadius:'50%', width:'18px', height:'18px', fontSize:'12px',
                 display:'flex', alignItems:'center', justifyContent:'center'
               }}>{count}</span>}
+
+              {/* 🗑 Delete button */}
+              <button
+                className="delete-btn"
+                onClick={(e)=>{
+                  e.stopPropagation();
+                  setVegetables(prev => prev.filter((_, i) => i !== idx));
+                  if(selectedVegetable === idx) setSelectedVegetable(null);
+                }}
+                title="Delete from palette"
+              >🗑️</button>
             </div>
           )
         })}
@@ -89,15 +111,15 @@ export default function Sidebar({
       </button>
 
       <h2>📍 Planted</h2>
-<ul className="plant-list">
-  {plants.map((p, idx) => (
-    <li key={idx} className="plant-item">
-      <span>{p.emoji} {p.name} at ({Math.floor(p.x)}, {Math.floor(p.y)})</span>
-      <button className="icon-btn" onClick={() => setEditingIndex(idx)} title="Edit">✏️</button>
-      <button className="icon-btn" onClick={() => setPlants(plants.filter((_, i) => i !== idx))} title="Delete">🗑️</button>
-    </li>
-  ))}
-</ul>
+      <ul className="plant-list">
+        {plants.map((p, idx) => (
+          <li key={idx} className="plant-item">
+            <span>{p.emoji} {p.name} at ({Math.floor(p.x)}, {Math.floor(p.y)})</span>
+            <button className="icon-btn" onClick={() => setEditingIndex(idx)} title="Edit">✏️</button>
+            <button className="icon-btn" onClick={() => setPlants(plants.filter((_, i) => i !== idx))} title="Delete">🗑️</button>
+          </li>
+        ))}
+      </ul>
 
       {editingIndex !== null && <p style={{color:'green'}}>Editing plant #{editingIndex+1} – click new spot</p>}
     </aside>

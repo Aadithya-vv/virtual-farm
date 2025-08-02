@@ -17,7 +17,7 @@ export default function CanvasGrid({
     const drawGrid = () => {
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      // Grid lines
+      // Draw grid lines
       ctx.strokeStyle="#cce3d1";
       for(let i=0;i<=canvas.width;i+=100){
         ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
@@ -101,8 +101,15 @@ export default function CanvasGrid({
       }
       else if(selectedVegetable!==null){
         const veg=vegetables[selectedVegetable];
-        if(!checkOverlap(mouseX,mouseY,veg.spread)){
-          setPlants(prev=>[...prev,{...veg, x:mouseX, y:mouseY}]);
+        if(!checkOverlap(mouseX,mouseY, Number(veg.spread))){
+          setPlants(prev=>[...prev,{
+            name: veg.name,
+            emoji: veg.emoji,
+            spread: Number(veg.spread),
+            depth: Number(veg.depth),
+            x: mouseX,
+            y: mouseY
+          }]);
         } else {
           setToast({ visible:true, message:"❌ Overlap: can't place here!" });
           setTimeout(()=>setToast({ visible:false, message:'' }), 3000);
@@ -110,15 +117,46 @@ export default function CanvasGrid({
       }
     };
 
+    // ✅ Drag-and-drop:
+    const onDragOver = e => {
+      e.preventDefault(); // allow drop
+    };
+
+    const onDrop = e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const dropX = (e.clientX - rect.left) / scale;
+      const dropY = (e.clientY - rect.top) / scale;
+
+      const veg = JSON.parse(e.dataTransfer.getData("application/json"));
+      if(!checkOverlap(dropX, dropY, Number(veg.spread))){
+        setPlants(prev=>[...prev,{
+          name: veg.name,
+          emoji: veg.emoji,
+          spread: Number(veg.spread),
+          depth: Number(veg.depth),
+          x: dropX,
+          y: dropY
+        }]);
+      } else {
+        setToast({ visible:true, message:"❌ Overlap: can't place here!" });
+        setTimeout(()=>setToast({ visible:false, message:'' }), 3000);
+      }
+    };
+
     canvas.addEventListener('mousemove', onMove);
     canvas.addEventListener('mouseleave', onLeave);
     canvas.addEventListener('click', onClick);
+    canvas.addEventListener('dragover', onDragOver);
+    canvas.addEventListener('drop', onDrop);
     drawGrid();
 
     return ()=>{
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('mouseleave', onLeave);
       canvas.removeEventListener('click', onClick);
+      canvas.removeEventListener('dragover', onDragOver);
+      canvas.removeEventListener('drop', onDrop);
     };
   }, [vegetables, plants, selectedVegetable, scale, setCoords, setPlants, editingIndex, setEditingIndex, setTooltip, setToast]);
 

@@ -144,3 +144,25 @@
     padding: 8px;
   }
 }
+.veg-item[draggable] {
+  cursor: grab;
+}
+
+.veg-item[draggable]:active {
+  cursor: grabbing;
+}
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #c62828;   /* deep red */
+  font-size: 14px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  padding: 0;
+}
+
+.delete-btn:hover {
+  color: #b71c1c;
+}
