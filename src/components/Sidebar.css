@@ -7,6 +7,7 @@
   overflow-y: auto;
   border-top-right-radius: 10px;
   border-bottom-right-radius: 10px;
+  flex-shrink: 0;
 }
 
 .sidebar h2 {
@@ -29,7 +30,11 @@
   border-radius: 5px;
   background: rgba(76, 175, 80, 0.05);
   font-size: 0.85rem;
+  position: relative;
   transition: background 0.2s ease, border 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .veg-item:hover {
@@ -39,6 +44,36 @@
 .veg-item.selected {
   border: 1px solid #4CAF50;
   background: rgba(76, 175, 80, 0.20);
+}
+
+.veg-item img {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.delete-btn {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #c62828;
+  font-size: 14px;
+  opacity: 0;                   /* hide by default */
+  transition: opacity 0.2s;
+  padding: 0;
+}
+
+
+.veg-item:hover .delete-btn {
+  opacity: 1;                   /* show on hover */
+}
+
+.delete-btn:hover {
+  color: #b71c1c;
 }
 
 .add-veg-form {
@@ -62,7 +97,7 @@
 }
 
 .add-veg-form button {
-  padding: 5px 8px;
+  padding: 6px 10px;
   background: #4CAF50;
   color: #fff;
   border: none;
@@ -75,6 +110,7 @@
 .add-veg-form button:hover {
   background: #3c9440;
 }
+
 .icon-btn {
   background: none;
   border: none;
@@ -89,6 +125,7 @@
 .icon-btn:hover {
   color: #2e7d32;
 }
+
 .plant-list {
   list-style: none;
   padding: 0;
@@ -112,30 +149,12 @@
   background: rgba(76, 175, 80, 0.12);
 }
 
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  margin-left: 4px;
-  color: #4CAF50;
-  transition: color 0.2s;
-  padding: 2px;
+.veg-item[draggable] {
+  cursor: grab;
 }
 
-.icon-btn:hover {
-  color: #2e7d32;
-}
-.sidebar {
-  width: 230px;
-  background: linear-gradient(180deg, #ffffff, #f5f8f5);
-  padding: 12px;
-  border-right: 1px solid #cce3d1;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
-  overflow-y: auto;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
-  flex-shrink: 0;
+.veg-item[draggable]:active {
+  cursor: grabbing;
 }
 
 @media (max-width: 768px) {
@@ -144,25 +163,45 @@
     padding: 8px;
   }
 }
-.veg-item[draggable] {
-  cursor: grab;
-}
-
-.veg-item[draggable]:active {
-  cursor: grabbing;
-}
-.delete-btn {
-  background: none;
+.sidebar button {
+  padding: 6px 10px;
+  background: #4CAF50;
+  color: #fff;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
-  color: #c62828;   /* deep red */
-  font-size: 14px;
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  padding: 0;
+  font-size: 0.85rem;
+  transition: background 0.2s ease;
 }
 
-.delete-btn:hover {
-  color: #b71c1c;
+.sidebar button:hover {
+  background: #3c9440;
+}
+
+.sidebar button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.plant-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: rgba(76, 175, 80, 0.05);
+  font-size: 0.85rem;
+  overflow: hidden;          /* prevent content from spilling out */
+}
+
+.plant-list li span {
+  flex: 1;                   /* take available space */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plant-list li button {
+  flex-shrink: 0;            /* buttons won't shrink */
+  margin-left: 4px;
 }

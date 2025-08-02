@@ -138,6 +138,115 @@ main {
     display: none;
   }
 }
+* {
+  color: #000 !important;
+}
+/* Global text color */
+* {
+  color: #000 !important;
+}
+
+/* All text inputs white background, black text */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"] {
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 4px 6px;
+  margin-bottom: 6px;
+}
+
+/* Buttons keep as you like, or clean */
+button {
+  color: #000 !important;
+}
+
+/* Tooltip: white background, black text */
+.tooltip {
+  background: #fff !important;
+  color: #000 !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  pointer-events: none;
+  position: fixed;
+}
+
+/* Toast message, adjust as needed */
+.toast {
+  background: #fff !important;
+  color: #000 !important;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.add-plant-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.add-plant-card h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.add-plant-card input[type="text"],
+.add-plant-card input[type="number"] {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.add-plant-card button {
+  background: #4caf50;
+  color: #fff !important;
+  border: none;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.add-plant-card button:hover {
+  background: #388e3c;
+}
+
+.file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 1px dashed #aaa;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.preview-img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
 
 @keyframes fadein { from { opacity:0; transform:translateY(10px);} to{ opacity:1; transform:translateY(0);} }
 @keyframes fadeout { from { opacity:1;} to{ opacity:0;} }

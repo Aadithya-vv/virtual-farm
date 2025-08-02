@@ -3,172 +3,169 @@ import React, { useRef, useEffect } from 'react';
 export default function CanvasGrid({
   vegetables, plants, setPlants,
   selectedVegetable, scale, setCoords,
-  editingIndex, setEditingIndex, setTooltip, setToast
+  editingId, setEditingId, setToast
 }) {
   const canvasRef = useRef();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-
     let mouseX=0, mouseY=0;
-    let showPreview = false;
+    let showPreview=false;
+    const imageCache={};
 
-    const drawGrid = () => {
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      draw();
+    };
 
-      // Draw grid lines
-      ctx.strokeStyle="#cce3d1";
-      for(let i=0;i<=canvas.width;i+=100){
-        ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
-      }
-      for(let j=0;j<=canvas.height;j+=100){
-        ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke();
-      }
+    const draw = () => {
+      // background: light brown
+      ctx.fillStyle = '#d2b48c';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Existing plants
-      plants.forEach(p=>{
+      const spacing = 50 * scale;
+
+      // vertical grid lines
+      for (let x = 0; x < canvas.width; x += spacing) {
         ctx.beginPath();
-        ctx.arc(p.x,p.y,p.spread/2,0,Math.PI*2);
-        ctx.fillStyle="rgba(76,175,80,0.15)";
-        ctx.fill();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.strokeStyle = 'rgba(166, 124, 82, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
 
-        ctx.font = "24px serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(p.emoji || "🌱", p.x, p.y);
+      // horizontal grid lines
+      for (let y = 0; y < canvas.height; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.strokeStyle = 'rgba(166, 124, 82, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // dark border
+      ctx.beginPath();
+      ctx.rect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#5c3d1a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // draw plants
+      plants.forEach((p, idx) => {
+        ctx.beginPath();
+        ctx.arc(p.x * scale, p.y * scale, (p.spread / 2) * scale, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(76,175,80,0.15)";
+        ctx.fill();
+        if (p.image) {
+          let img = imageCache[p.image];
+          if (!img) {
+            img = new Image();
+            img.src = p.image;
+            imageCache[p.image] = img;
+            img.onload = draw;
+          }
+          if (img.complete) ctx.drawImage(img, p.x * scale - 16, p.y * scale - 16, 32, 32);
+        }
       });
 
-      // Ghost preview
-      if(showPreview){
-        let veg=null;
-        if(editingIndex!==null) veg=plants[editingIndex];
-        else if(selectedVegetable!==null) veg=vegetables[selectedVegetable];
-        if(veg){
-          const canPlace=!checkOverlap(mouseX,mouseY,veg.spread, editingIndex);
-          ctx.beginPath();
-          ctx.arc(mouseX, mouseY, veg.spread/2, 0, Math.PI*2);
-          ctx.lineWidth = 2;
-          ctx.setLineDash([8,4]);
-          ctx.strokeStyle = canPlace ? "green" : "red";
-          ctx.stroke();
-          ctx.setLineDash([]);
+      // preview when adding/editing
+      if (showPreview && selectedVegetable !== null) {
+        const veg = vegetables[selectedVegetable];
+        const halfSpread = (veg.spread/2);
+        const overlap = checkOverlap(mouseX, mouseY, veg.spread, editingId);
 
-          ctx.font = "24px serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(veg.emoji || "🌱", mouseX, mouseY);
+        // boundary check to keep inside
+        const safeX = Math.max(halfSpread, Math.min(mouseX, canvas.width/scale - halfSpread));
+        const safeY = Math.max(halfSpread, Math.min(mouseY, canvas.height/scale - halfSpread));
+
+        ctx.beginPath();
+        ctx.arc(safeX*scale, safeY*scale, halfSpread*scale, 0, Math.PI*2);
+        ctx.setLineDash([5,3]);
+        ctx.strokeStyle = overlap ? "red" : "green";
+        ctx.lineWidth=1;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        if (veg.image) {
+          let img = imageCache[veg.image];
+          if (!img) {
+            img = new Image();
+            img.src = veg.image;
+            imageCache[veg.image] = img;
+            img.onload = draw;
+          }
+          if (img.complete) ctx.drawImage(img, safeX*scale - 16, safeY*scale - 16, 32, 32);
         }
       }
     };
 
-    const checkOverlap = (x,y,spread,skipIndex=null) =>
-      plants.some((p, idx)=>{
-        if(idx===skipIndex) return false;
-        const dx = p.x - x;
-        const dy = p.y - y;
-        return Math.sqrt(dx*dx+dy*dy) < (p.spread/2 + spread/2);
+    const checkOverlap = (x, y, spread, skipIdx) =>
+      plants.some((p, idx) => {
+        if (skipIdx !== null && idx === skipIdx) return false;
+        const dx = p.x - x, dy = p.y - y;
+        return Math.hypot(dx, dy) < (p.spread/2 + spread/2);
       });
 
     const onMove = e => {
       const rect = canvas.getBoundingClientRect();
       mouseX = (e.clientX - rect.left) / scale;
       mouseY = (e.clientY - rect.top) / scale;
-      setCoords({x: Math.floor(mouseX), y: Math.floor(mouseY)});
-      setTooltip({ visible:true, x:e.clientX, y:e.clientY, text:`X:${Math.floor(mouseX)}, Y:${Math.floor(mouseY)}` });
-      showPreview=true; drawGrid();
+      setCoords({ x: Math.floor(mouseX), y: Math.floor(mouseY) });
+      showPreview = true;
+      draw();
     };
 
-    const onLeave=()=>{
-      setTooltip(t=>({...t,visible:false}));
-      showPreview=false; drawGrid();
+    const onLeave = () => {
+      showPreview = false;
+      draw();
     };
 
-    const onClick=()=>{
-      if(editingIndex!==null){
-        const old=plants[editingIndex];
-        if(!checkOverlap(mouseX,mouseY,old.spread,editingIndex)){
-          setPlants(prev=>{
-            const copy=[...prev];
-            copy[editingIndex]={...copy[editingIndex], x:mouseX, y:mouseY};
-            return copy;
+    const onClick = () => {
+      if (selectedVegetable !== null) {
+        const veg = vegetables[selectedVegetable];
+        const halfSpread = veg.spread/2;
+
+        // keep inside canvas bounds
+        const safeX = Math.max(halfSpread, Math.min(mouseX, canvas.width/scale - halfSpread));
+        const safeY = Math.max(halfSpread, Math.min(mouseY, canvas.height/scale - halfSpread));
+
+        if (!checkOverlap(safeX, safeY, veg.spread, editingId)) {
+          const newPlant = { ...veg, x: safeX, y: safeY };
+          setPlants(prev => {
+            if (editingId !== null) {
+              const copy = [...prev];
+              copy[editingId] = newPlant;
+              setEditingId(null);
+              return copy;
+            }
+            return [...prev, newPlant];
           });
-          setEditingIndex(null);
         } else {
-          setToast({ visible:true, message:"❌ Overlap: can't move here!" });
-          setTimeout(()=>setToast({ visible:false, message:'' }), 3000);
-        }
-      }
-      else if(selectedVegetable!==null){
-        const veg=vegetables[selectedVegetable];
-        if(!checkOverlap(mouseX,mouseY, Number(veg.spread))){
-          setPlants(prev=>[...prev,{
-            name: veg.name,
-            emoji: veg.emoji,
-            spread: Number(veg.spread),
-            depth: Number(veg.depth),
-            x: mouseX,
-            y: mouseY
-          }]);
-        } else {
-          setToast({ visible:true, message:"❌ Overlap: can't place here!" });
-          setTimeout(()=>setToast({ visible:false, message:'' }), 3000);
+          setToast({ visible:true, message:"❌ Overlap!" });
+          setTimeout(()=>setToast({ visible:false, message:'' }), 2000);
         }
       }
     };
 
-    // ✅ Drag-and-drop:
-    const onDragOver = e => {
-      e.preventDefault(); // allow drop
-    };
-
-    const onDrop = e => {
-      e.preventDefault();
-      const rect = canvas.getBoundingClientRect();
-      const dropX = (e.clientX - rect.left) / scale;
-      const dropY = (e.clientY - rect.top) / scale;
-
-      const veg = JSON.parse(e.dataTransfer.getData("application/json"));
-      if(!checkOverlap(dropX, dropY, Number(veg.spread))){
-        setPlants(prev=>[...prev,{
-          name: veg.name,
-          emoji: veg.emoji,
-          spread: Number(veg.spread),
-          depth: Number(veg.depth),
-          x: dropX,
-          y: dropY
-        }]);
-      } else {
-        setToast({ visible:true, message:"❌ Overlap: can't place here!" });
-        setTimeout(()=>setToast({ visible:false, message:'' }), 3000);
-      }
-    };
-
+    resize();
+    window.addEventListener('resize', resize);
     canvas.addEventListener('mousemove', onMove);
     canvas.addEventListener('mouseleave', onLeave);
     canvas.addEventListener('click', onClick);
-    canvas.addEventListener('dragover', onDragOver);
-    canvas.addEventListener('drop', onDrop);
-    drawGrid();
 
-    return ()=>{
+    return () => {
+      window.removeEventListener('resize', resize);
       canvas.removeEventListener('mousemove', onMove);
       canvas.removeEventListener('mouseleave', onLeave);
       canvas.removeEventListener('click', onClick);
-      canvas.removeEventListener('dragover', onDragOver);
-      canvas.removeEventListener('drop', onDrop);
     };
-  }, [vegetables, plants, selectedVegetable, scale, setCoords, setPlants, editingIndex, setEditingIndex, setTooltip, setToast]);
+  }, [vegetables, plants, selectedVegetable, scale, editingId, setCoords, setPlants, setEditingId, setToast]);
 
   return (
-    <canvas ref={canvasRef} width={2000} height={2000}
-      style={{
-        transform:`scale(${scale})`,
-        transformOrigin:'0 0',
-        border:'1px solid #cce3d1',
-        background:'#fff8ec',
-        borderRadius:'10px'
-      }}
-    />
+    <canvas ref={canvasRef} style={{ display:'block', width:'100vw', height:'100vh' }}/>
   );
 }

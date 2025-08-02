@@ -10,110 +10,96 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, setDoc, deleteDoc, doc } from "firebase/firestore";
 
 export default function App() {
-  const [vegetables, setVegetables] = useState([
-    { name: 'Tomato', emoji: '🍅', spread: 30, depth: 20 },
-    { name: 'Carrot', emoji: '🥕', spread: 20, depth: 15 },
-    { name: 'Lettuce', emoji: '🥬', spread: 25, depth: 10 }
-  ]);
+  const [vegetables, setVegetables] = useState([]);
   const [plants, setPlants] = useState([]);
   const [selectedVegetable, setSelectedVegetable] = useState(null);
   const [scale, setScale] = useState(1);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
+  const [editingId, setEditingId] = useState(null);
   const [toast, setToast] = useState({ visible:false, message:'' });
   const [user, setUser] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
-  const [sidebarVisible, setSidebarVisible] = useState(true); // new
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
-  useEffect(()=>{
-    const unsub=onAuthStateChanged(auth, (u)=>{
-      if(u) setUser(u); else setUser(null);
-    });
-    return ()=>unsub();
-  },[]);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => { setUser(u || null); });
+    return () => unsub();
+  }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     if(user){
-      const load=async()=>{
-        const snap=await getDocs(collection(db,"users",user.uid,"plants"));
-        setPlants(snap.docs.map(d=>d.data()));
+      const load = async () => {
+        const plantsSnap = await getDocs(collection(db, "users", user.uid, "plants"));
+        setPlants(plantsSnap.docs.map(d => d.data()));
+        const paletteSnap = await getDocs(collection(db, "users", user.uid, "palette"));
+        setVegetables(paletteSnap.docs.map(d => d.data()));
       };
       load();
     }
-  },[user]);
+  }, [user]);
 
-  useEffect(()=>{
+  useEffect(() => {
     if(user){
-      const savePlants = async () => {
-        const col = collection(db,"users",user.uid,"plants");
+      const save = async () => {
+        const col = collection(db, "users", user.uid, "plants");
         const snap = await getDocs(col);
         const existingIds = snap.docs.map(d => d.id);
-        await Promise.all(plants.map((p, idx) =>
-          setDoc(doc(col, idx.toString()), p)
-        ));
-        const keepIds = plants.map((_, idx)=>idx.toString());
-        const toDelete = existingIds.filter(id=>!keepIds.includes(id));
-        await Promise.all(toDelete.map(id=>deleteDoc(doc(col, id))));
+        await Promise.all(plants.map((p, idx) => setDoc(doc(col, idx.toString()), p)));
+        const keep = plants.map((_, idx) => idx.toString());
+        const toDelete = existingIds.filter(id => !keep.includes(id));
+        await Promise.all(toDelete.map(id => deleteDoc(doc(col, id))));
       };
-      savePlants();
+      save();
     }
-  },[plants,user]);
+  }, [plants, user]);
+
+  useEffect(() => {
+    if(user){
+      const save = async () => {
+        const col = collection(db, "users", user.uid, "palette");
+        const snap = await getDocs(col);
+        const existingIds = snap.docs.map(d => d.id);
+        await Promise.all(vegetables.map((v, idx) => setDoc(doc(col, idx.toString()), v)));
+        const keep = vegetables.map((_, idx) => idx.toString());
+        const toDelete = existingIds.filter(id => !keep.includes(id));
+        await Promise.all(toDelete.map(id => deleteDoc(doc(col, id))));
+      };
+      save();
+    }
+  }, [vegetables, user]);
 
   if(!user) return showSignup
-    ? <SignupPage setUser={setUser} goToLogin={()=>setShowSignup(false)} />
-    : <LoginPage setUser={setUser} goToSignup={()=>setShowSignup(true)} />;
+    ? <SignupPage setUser={setUser} goToLogin={() => setShowSignup(false)} />
+    : <LoginPage setUser={setUser} goToSignup={() => setShowSignup(true)} />;
 
   return (
     <div className="app">
-      {/* show/hide sidebar based on sidebarVisible */}
       {sidebarVisible && (
         <Sidebar
-          vegetables={vegetables}
-          setVegetables={setVegetables}
-          selectedVegetable={selectedVegetable}
-          setSelectedVegetable={setSelectedVegetable}
-          plants={plants}
-          setPlants={setPlants}
-          editingIndex={editingIndex}
-          setEditingIndex={setEditingIndex}
+          vegetables={vegetables} setVegetables={setVegetables}
+          selectedVegetable={selectedVegetable} setSelectedVegetable={setSelectedVegetable}
+          plants={plants} setPlants={setPlants}
+          editingId={editingId} setEditingId={setEditingId}
           setToast={setToast}
         />
       )}
       <main>
         <div className="top-bar">
-          <button className="hamburger" onClick={()=>setSidebarVisible(!sidebarVisible)}>
-            ☰
-          </button>
+          <button className="hamburger" onClick={() => setSidebarVisible(!sidebarVisible)}>☰</button>
           <Controls scale={scale} setScale={setScale} coords={coords} />
-          <button className="logout-btn" onClick={()=>signOut(auth)}>🚪 Logout</button>
+          <button className="logout-btn" onClick={() => signOut(auth)}>🚪 Logout</button>
         </div>
-        <div className="grid-wrapper">
-          <CanvasGrid
-            vegetables={vegetables}
-            plants={plants}
-            setPlants={setPlants}
-            selectedVegetable={selectedVegetable}
-            scale={scale}
-            setCoords={setCoords}
-            editingIndex={editingIndex}
-            setEditingIndex={setEditingIndex}
-            setTooltip={setTooltip}
-            setToast={setToast}
-          />
-        </div>
-        {/* Tooltip */}
-        <div className="tooltip"
-          style={{display:tooltip.visible?'block':'none',
-            position:'fixed',top:tooltip.y+10,left:tooltip.x+10,
-            background:'rgba(0,0,0,0.7)',color:'#fff',padding:'2px 6px',
-            borderRadius:'4px',fontSize:'12px',pointerEvents:'none'}}>
-          {tooltip.text}
-        </div>
-        {/* Toast */}
-        {toast.visible && (
-          <div className="toast">{toast.message}</div>
-        )}
+        <CanvasGrid
+          vegetables={vegetables}
+          plants={plants}
+          setPlants={setPlants}
+          selectedVegetable={selectedVegetable}
+          scale={scale}
+          setCoords={setCoords}
+          editingId={editingId} setEditingId={setEditingId}
+          setToast={setToast}
+        />
+        {toast.visible && <div className="toast">{toast.message}</div>}
       </main>
     </div>
   );
