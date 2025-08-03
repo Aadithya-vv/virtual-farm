@@ -205,3 +205,18 @@
   flex-shrink: 0;            /* buttons won't shrink */
   margin-left: 4px;
 }
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 10;
+    height: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-bottom: 1px solid #cce3d1;
+    border-right: none;
+    border-radius: 0 0 10px 10px;
+  }
+}

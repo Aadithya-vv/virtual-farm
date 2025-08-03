@@ -10,27 +10,29 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, setDoc, deleteDoc, doc } from "firebase/firestore";
 
 export default function App() {
-  const [vegetables, setVegetables] = useState([]);
+  const [vegetables, setVegetables] = useState([]); 
   const [plants, setPlants] = useState([]);
   const [selectedVegetable, setSelectedVegetable] = useState(null);
   const [scale, setScale] = useState(1);
   const [coords, setCoords] = useState({ x: 0, y: 0 });
   const [editingId, setEditingId] = useState(null);
-  const [toast, setToast] = useState({ visible:false, message:'' });
+  const [toast, setToast] = useState({ visible: false, message: '' });
   const [user, setUser] = useState(null);
   const [showSignup, setShowSignup] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(true);
 
+  // listen login/logout
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => { setUser(u || null); });
     return () => unsub();
   }, []);
 
+  // load plants & palette
   useEffect(() => {
-    if(user){
+    if (user) {
       const load = async () => {
-        const plantsSnap = await getDocs(collection(db, "users", user.uid, "plants"));
-        setPlants(plantsSnap.docs.map(d => d.data()));
+        const plantSnap = await getDocs(collection(db, "users", user.uid, "plants"));
+        setPlants(plantSnap.docs.map(d => d.data()));
         const paletteSnap = await getDocs(collection(db, "users", user.uid, "palette"));
         setVegetables(paletteSnap.docs.map(d => d.data()));
       };
@@ -38,8 +40,9 @@ export default function App() {
     }
   }, [user]);
 
+  // save plants
   useEffect(() => {
-    if(user){
+    if (user) {
       const save = async () => {
         const col = collection(db, "users", user.uid, "plants");
         const snap = await getDocs(col);
@@ -53,8 +56,9 @@ export default function App() {
     }
   }, [plants, user]);
 
+  // save palette
   useEffect(() => {
-    if(user){
+    if (user) {
       const save = async () => {
         const col = collection(db, "users", user.uid, "palette");
         const snap = await getDocs(col);
@@ -68,7 +72,7 @@ export default function App() {
     }
   }, [vegetables, user]);
 
-  if(!user) return showSignup
+  if (!user) return showSignup
     ? <SignupPage setUser={setUser} goToLogin={() => setShowSignup(false)} />
     : <LoginPage setUser={setUser} goToSignup={() => setShowSignup(true)} />;
 
